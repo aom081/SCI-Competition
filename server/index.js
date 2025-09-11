@@ -1,88 +1,44 @@
 import express from "express";
-import bodyParser from "body-parser";
-
 const app = express();
-const PORT = 3000;
+import dotenv from "dotenv";
+dotenv.config();
+const PORT = process.env.PORT || 5000;
+const FRONTEND_URL = process.env.FRONTEND_URL;
+import ActivityRouter from "./routers/activity.router.js";
+import authRouter from "./routers/auth.router.js";
+import cors from "cors";
+app.use(
+  cors({
+    origin: ["http://localhost:5173", "127.0.0.1:5173", FRONTEND_URL],
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    allowedHeaders: ["Content-Type", "Authorization", "x-access-token"],
+  })
+);
 
-app.use(bodyParser.json());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-// In-memory storage for activities
-let activities = [];
-let nextId = 1;
+import db from "./models/index.js";
+const role = db.Role;
 
-// Activity model fields
-// id, name, description, type, level, team_size, date, location, reg_open, reg_close, contact_name, contact_phone, contact_email, status
-
-// Create a new activity
-app.post("/activities", (req, res) => {
-  const {
-    name,
-    description,
-    type,
-    level,
-    team_size,
-    date,
-    location,
-    reg_open,
-    reg_close,
-    contact_name,
-    contact_phone,
-    contact_email,
-    status,
-  } = req.body;
-  const activity = {
-    id: nextId++,
-    name,
-    description,
-    type,
-    level,
-    team_size,
-    date,
-    location,
-    reg_open,
-    reg_close,
-    contact_name,
-    contact_phone,
-    contact_email,
-    status,
-  };
-  activities.push(activity);
-  res.status(201).json(activity);
+db.sequelize.sync({ force: true }).then(() => {
+  initRole();
+  console.log("Drop and Sync");
 });
-
-// Get all activities
-app.get("/activities", (req, res) => {
-  res.json(activities);
-});
-
-// Get a single activity by id
-app.get("/activities/:id", (req, res) => {
-  const activity = activities.find((a) => a.id === parseInt(req.params.id));
-  if (!activity) return res.status(404).json({ error: "Activity not found" });
-  res.json(activity);
-});
-
-// Update an activity
-app.put("/activities/:id", (req, res) => {
-  const activity = activities.find((a) => a.id === parseInt(req.params.id));
-  if (!activity) return res.status(404).json({ error: "Activity not found" });
-  Object.assign(activity, req.body);
-  res.json(activity);
-});
-
-// Delete an activity
-app.delete("/activities/:id", (req, res) => {
-  const index = activities.findIndex((a) => a.id === parseInt(req.params.id));
-  if (index === -1)
-    return res.status(404).json({ error: "Activity not found" });
-  activities.splice(index, 1);
-  res.status(204).send();
-});
-
+const initRole = () => {
+  role.create({ id: 1, name: "admin" });
+  role.create({ id: 2, name: "manager" });
+  role.create({ id: 3, name: "teacher" });
+  role.create({ id: 4, name: "judge" });
+};
 app.get("/", (req, res) => {
-  res.send("Welcome to the SCI Competition Activities API!");
+  res.send("SCI Competition Restful API Completed");
 });
+
+//use routers
+app.use("/api/v1/activities", ActivityRouter);
+app.use("/api/v1/auth", authRouter);
 
 app.listen(PORT, () => {
-  console.log(`Server running at http://localhost:${PORT}`);
+  console.log("Listening to http://localhost:" + PORT);
 });
