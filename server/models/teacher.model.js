@@ -20,9 +20,7 @@ const Teacher = User.init(
         },
       },
     },
-  },
-  {
-    hook: {
+    hooks: {
       beforeCreate: (teacher) => {
         teacher.type = "teacher";
       },

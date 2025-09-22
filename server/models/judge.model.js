@@ -12,7 +12,7 @@ const Judge = User.init(
     },
   },
   {
-    hook: {
+    hooks: {
       beforeCreate: (judge) => {
         judge.type = "judge";
       },

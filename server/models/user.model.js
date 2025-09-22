@@ -6,8 +6,8 @@ const User = sequelize.define(
   {
     id: {
       type: DataTypes.INTEGER,
-      allowNull: false,
       primaryKey: true,
+      autoIncrement: true,
     },
     name: {
       type: DataTypes.STRING,
@@ -29,14 +29,23 @@ const User = sequelize.define(
       type: DataTypes.STRING,
       allowNull: false,
     },
+    // Teacher attribute
+    school: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    phone: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
     isVerified: {
       type: DataTypes.BOOLEAN,
-      default: false,
+      defaultValue: false,
       allowNull: false,
     },
   },
   {
-    hook: {
+    hooks: {
       beforeCreate: async (user) => {
         if (user.password) {
           const salt = await becrypt.genSalt(10);

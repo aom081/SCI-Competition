@@ -2,6 +2,7 @@ import express from "express";
 const app = express();
 import dotenv from "dotenv";
 dotenv.config();
+const NODE_ENV = process.env.NODE_ENV || "development";
 const PORT = process.env.PORT || 5000;
 const FRONTEND_URL = process.env.FRONTEND_URL;
 import ActivityRouter from "./routers/activity.router.js";
@@ -17,20 +18,22 @@ app.use(
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
+console.log("##################################");
 import db from "./models/index.js";
-const role = db.Role;
-
-db.sequelize.sync({ force: true }).then(() => {
-  initRole();
-  console.log("Drop and Sync");
-});
-const initRole = () => {
-  role.create({ id: 1, name: "admin" });
-  role.create({ id: 2, name: "manager" });
-  role.create({ id: 3, name: "teacher" });
-  role.create({ id: 4, name: "judge" });
+const initDatabase = async () => {
+  try {
+    await db.sequelize.authenticate();
+    console.log("Database connection established successfully");
+    // if (NODE_ENV === "development") {
+    await db.sequelize.sync({ alter: true });
+    console.log("database Synced in development mode");
+    // }
+  } catch (error) {
+    console.error("Unable to connect to database", error);
+  }
 };
+initDatabase();
+
 app.get("/", (req, res) => {
   res.send("SCI Competition Restful API Completed");
 });
